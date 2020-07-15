@@ -1,0 +1,64 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "snapshots_Name": {
+            "defaultValue" : "",
+            "type": "String"
+        },
+        "sourceDiskID": {
+            "defaultValue" : "",
+            "type": "String"
+        },
+        "diskSizeGB": {
+            "defaultValue" : "",
+            "type": "int"
+        },
+        "sku_name": {
+            "defaultValue" : "",
+            "type": "string"
+        },
+        "sku_tier": {
+            "defaultValue" : "",
+            "type": "string"
+        },
+        "osType": {
+            "defaultValue": "",
+            "type": "string",
+            "allowedValues": [
+                "Windows",
+                "Linux",
+                ""
+            ]
+        }
+    },
+    "variables": {
+        
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Compute/snapshots",
+            "apiVersion": "2019-07-01",
+            "name": "[parameters('snapshots_Name')]",
+            "condition": "[not(empty(parameters('osType')))]",
+            "location": "koreacentral",
+            "sku": {
+                "name": "[parameters('sku_name')]",
+                "tier": "[parameters('sku_tier')]"
+            },
+            "properties": {
+                "osType": "[parameters('osType')]",
+                "hyperVGeneration": "V1",
+                "creationData": {
+                    "createOption": "Copy",
+                    "sourceResourceId": "[parameters('sourceDiskID')]"
+                },
+                "diskSizeGB": "[parameters('diskSizeGB')]",
+                "encryption": {
+                    "type": "EncryptionAtRestWithPlatformKey"
+                },
+                "incremental": false
+            }
+        }
+    ]
+}

@@ -1,0 +1,10 @@
+{
+    "snapshotName": {
+        "prefix": "BS-",
+        "postfix": "yy-MM-ddTHH-mm"
+    },
+    "storageTable": {
+        "resourceGroup": "RG-SnapshotBackup",
+        "storageName": "pcwstoragetable"
+    }
+}

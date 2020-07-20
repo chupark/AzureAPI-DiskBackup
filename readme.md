@@ -37,3 +37,13 @@ $header = @{
     "Authorization"="SharedKeyLite pcwstoragetable:" + $signedSignature
 }
 ````
+
+### 5. Blob의 복제 상테 모니터링
+Blob 복제도 시간이 오래 걸리는 Long running job이다. 하지만 Snapshot과 조금 다르다. 스냅샷은 Header에 상태 정보를 확인할 수 있는 URL을 줬지만 Copy ID를 헤더로 던져준다.
+따라서 Blob의 상태를 모니터링 하려면 대상 Blob에 HTTP HEAD Request를 해야한다.   
+사진을 살펴보면 x-ms-copy-id가 서로 일치함을 확인할 수 있으며 Blob Copy상태와 progress를 확인할 수 있다.   
+![Alt text](https://raw.githubusercontent.com/chupark/AzureAPI-DiskBackup/master/img/2.%20blob%20status/1.%20copy%20start.png)    
+<br><br>
+
+x-ms-copy-status가 success가 될 때 까지 주기적으로 모니터링을 해야 할 필요가 있으며 Copy가 끝나면 다음과 같은 결과를 얻을 수 있다.
+![Alt text](https://github.com/chupark/AzureAPI-DiskBackup/blob/master/img/2.%20blob%20status/2.%20copy%20end.png)    

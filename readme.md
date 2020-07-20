@@ -11,8 +11,8 @@ Disk Snapshot의 SAS URL생성 요청의 경우 최초 응답이 [202 Created]�
 <br>
 
 ### 2. Azure Storage의 서명 문자열
-Azure Storage Account의 API인증은 Azure AD가 아닌 Storage Account의 공유 Key를 사용하여 서명 문자열을 암호화 하여 토큰으로 사용한다.  
-요청 헤더를 UTF-8로 인코딩 하고 -> Storage Account의 Shared Key를 사용하여 HMAC-SHA256으로 암호화 한 뒤 Base64로 다시 인코딩 하면 된다.
+Azure Storage Account의 API인증은 Azure AD가 아닌 Storage Account의 공유 Key를 사용하여 서명 문자열을 암호화 하여 토큰으로 사용한다.
+요청 헤더를 UTF-8로 인코딩 하고 -> Storage Account의 Shared Key를 사용하여 HMAC-SHA256으로 암호화 한 뒤 -> Base64로 다시 인코딩 하면 된다.
 이 과정에서 CanonicalizedHeaders와 CanonicalizedResource라는게 나타난다. -_-...  
 CanonicalizedHeaders 는 x-ms로 시작하는 헤더들을 나타내며 헤더를 추가할 때 마다 개행문자를 삽입해야 한다.  
 CanonicalizedResource 는 호출할 URL이다. 기본 폼은 /myStorageAccount/myStorageService/로 시작하며 그 뒤는 컨테이너, Blob 등 호출할 대상마다 다르다.
@@ -25,7 +25,7 @@ Azure Storage Table의 테이블 데이터 조회는 OData Protocol을 따른다
 참고 링크 : https://www.odata.org/odata-services/
 
 ### 4. Azure Storage Blob과 Header
-Azure Managed Snapshot SAS URI원본을 Azure Blob으로 복사하는 방법이 필요하여 Azure REST API공식 문서를 참조하여 시도해봤지만 인증 오류가 발생하며 복사가 안되는 어이없는 상황이 발생했다.  
+Azure Managed Snapshot SAS URI원본을 (Page Blob) Azure Blob으로 복사하는 방법이 필요하여 Azure REST API공식 문서를 참조하여 시도해봤지만 인증 오류가 발생하며 복사가 안되는 어이없는 상황이 발생했다.  
 공식 문서 : https://docs.microsoft.com/ko-kr/rest/api/storageservices/put-page-from-url  
 공식 문서에서 Required라고 나와있는 일부 Header은 실제로 넣었을 경우 인증 오류가 발생하여 하루종일 삽질하여 겨우 성공했다.  
 내가 사용한 헤더는 아래와 같으며 SharedKeyLite 인증 토큰을 사용했다.  

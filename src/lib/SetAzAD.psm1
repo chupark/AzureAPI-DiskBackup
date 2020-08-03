@@ -15,7 +15,8 @@ class SetAzAD {
             "client_secret"=$client_secret
             "resource"=$resource
         }
-        $this.token = Invoke-RestMethod -Method Post -Uri ("https://login.microsoftonline.com/" + $this.tenant + "/oauth2/token") -Body $body
+        $uri = "https://login.microsoftonline.com/{0}/oauth2/token" -f $this.tenant
+        $this.token = Invoke-RestMethod -Method Post -Uri $uri -Body $body -UseBasicParsing
     }
 }
 

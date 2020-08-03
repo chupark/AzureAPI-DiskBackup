@@ -35,13 +35,13 @@ Class ManagedDisk {
                 "/providers/Microsoft.Compute/disks/" + 
                 $diskName + 
                 "?api-version=2019-07-01"
-        $result = Invoke-WebRequest -Headers $this.header -Uri $url
+        $result = Invoke-WebRequest -Headers $this.header -Uri $url -UseBasicParsing
         ## valid here
         $result = $result | ConvertFrom-Json
         return ,$result
     }    
 
-    [PSCustomObject]getManagedDiskbyID($resourceIDs) {
+    [PSCustomObject]getManagedDiskbyID($resourceIDs, $lun) {
         $null = $resourceIDs -match "/resourceGroups/(?<resourceGroup>.+)/providers/Microsoft.Compute/disks/(?<diskName>.+)"
         $url = "https://management.azure.com/subscriptions/" +
                 $this.subscription + 
@@ -50,11 +50,11 @@ Class ManagedDisk {
                 "/providers/Microsoft.Compute/disks/" + 
                 $Matches.diskName + 
                 "?api-version=2019-07-01"
-        $result = Invoke-WebRequest -Headers $this.header -Uri $url
+        $result = Invoke-WebRequest -Headers $this.header -Uri $url -UseBasicParsing
 
         ## valid here
         $result = $result | ConvertFrom-Json
-        $this.addDisk($result)
+        $this.addDisk($result, $lun)
 
         return ,$result
     }
@@ -68,7 +68,7 @@ Class ManagedDisk {
                 "/providers/Microsoft.Compute/disks/" + 
                 $Matches.diskName + 
                 "?api-version=2019-07-01"
-        $result = Invoke-WebRequest -Headers $this.header -Uri $url
+        $result = Invoke-WebRequest -Headers $this.header -Uri $url -UseBasicParsing
 
         ## valid here
         $result = $result | ConvertFrom-Json

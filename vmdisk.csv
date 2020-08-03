@@ -1,3 +1,0 @@
-﻿vmName,diskName,diskId,lun
-VM-SnapshotBackup,VM-SnapshotBackup_OsDisk_1_df07050087da4cd5b7a8d9679991dae8,/subscriptions/e913dc0b-9255-46a3-b135-99c0d47161e6/resourceGroups/RG-SNAPSHOTBACKUP/providers/Microsoft.Compute/disks/VM-SnapshotBackup_OsDisk_1_df07050087da4cd5b7a8d9679991dae8,
-VM-SnapshotBackup,VM-SnapshotBackup_Data1,/subscriptions/e913dc0b-9255-46a3-b135-99c0d47161e6/resourceGroups/RG-SNAPSHOTBACKUP/providers/Microsoft.Compute/disks/VM-SnapshotBackup_Data1,0

@@ -19,48 +19,51 @@ Class DiskSnapshots {
     }
 
     [PSCustomObject]createDiskSnapshotWithARM($diskResourceGroup, [String]$armTemplate, $deploymentName) {
+            $uri = "https://management.azure.com/subscriptions/{0}/resourcegroups/{1}/providers/Microsoft.Resources/deployments/{2}?api-version=2019-10-01" -f $this.azAdInfo.subscription, $diskResourceGroup, $deploymentName
         try{
-            $req = Invoke-WebRequest -Headers $this.header -Uri ("https://management.azure.com/subscriptions/" + 
-                                                            $this.azAdInfo.subscription + 
-                                                            "/resourcegroups/" + 
-                                                            $diskResourceGroup + 
-                                                            "/providers/Microsoft.Resources/deployments/" + 
-                                                            $deploymentName + 
-                                                            "?api-version=2019-10-01") `
-                                    -Body ([System.Text.Encoding]::UTF8.GetBytes($armTemplate)) `
-                                    -Method Put
+            $req = Invoke-WebRequest -Headers $this.header -Uri $uri `
+                                     -Body ([System.Text.Encoding]::UTF8.GetBytes($armTemplate)) `
+                                     -Method Put `
+                                     -UseBasicParsing
             return $req
         } catch {
             return $_
         }
     }
-    <#
+
     [PSCustomObject]grantAccessURL([int]$durationInSeconds, [String]$diskResourceGroup, [String]$diskName) {
         $body = '{
             "access": "Read",
             "durationInSeconds": ' + $durationInSeconds + '
         }'
-        $accessheader = @{
-            "Authorization"="bearer " + $this.azAdInfo.token.access_token
-            "Content-Type"="application/json"
-        }
+        $uri = "https://management.azure.com/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Compute/snapshots/{2}/beginGetAccess?api-version=2019-07-01" -f $this.azAdInfo.subscription, $diskResourceGroup, $diskName
         $requestGrantAccess = Invoke-WebRequest -Method Post `
-                                                -Uri ("https://management.azure.com/subscriptions/" + 
-                                                      $azAdInfo.subscription + 
-                                                      "/resourceGroups/" + 
-                                                      $diskResourceGroup + 
-                                                      "/providers/Microsoft.Compute/snapshots/" + 
-                                                      $diskName + 
-                                                      "/beginGetAccess?api-version=2019-07-01") `
-                                                -Headers $accessheader `
-                                                -Body ([System.Text.Encoding]::UTF8.GetBytes($body))
-        
-        $promise = Invoke-WebRequest -Method Get `
-                                    -Headers $accessheader `
-                                    -Uri ($requestGrantAccess.Headers.'Azure-AsyncOperation'[0])
+                                                -Uri $uri `
+                                                -Headers $this.header `
+                                                -Body ([System.Text.Encoding]::UTF8.GetBytes($body)) `
+                                                -UseBasicParsing
+        return $requestGrantAccess
     }
-    #>
 
+    [PSCustomObject]revokeAccessURL([String]$diskResourceGroup, [String]$diskName) {
+        $uri = "https://management.azure.com/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Compute/snapshots/{2}/endGetAccess?api-version=2019-07-01" -f $this.azAdInfo.subscription, $diskResourceGroup, $diskName
+        $requestRevokeAccess = Invoke-WebRequest -Method Post `
+                                                 -Uri $uri `
+                                                 -Headers $this.header `
+                                                 -UseBasicParsing
+        return $requestRevokeAccess                                    
+    }
+
+
+    [PSCustomObject]getSnapshot([String]$diskResourceGroup, [String]$diskName) {
+        $uri = "https://management.azure.com/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Compute/snapshots/{2}?api-version=2019-07-01" -f $this.azAdInfo.subscription, $diskResourceGroup, $diskName
+        $snapshot = Invoke-WebRequest -Method Get `
+                                      -Uri $uri `
+                                      -Headers $this.header `
+                                      -UseBasicParsing
+        return $snapshot
+    }
+    
 }
 
 

@@ -16,9 +16,6 @@ param (
     [String]$sourceDiskId
 )
 
-$automationJobId = $PSPrivateMetadata.JobId.Guid
-Write-Output "Job Id is $automationJobId"
-
 $config = '{
     "snapshotName": {
         "prefix": "BS-",
@@ -68,9 +65,7 @@ $StorageBlob = StorageBlobFromAD -azAdInfo $AzAdInfo `
 ############################################################################################################################################
 try {
     $null = $DiskInfo.getManagedDiskbyID($sourceDiskId, "")
-    $tVmName = $DiskInfo.disks[0].vmName
-    $tDiskName = $DiskInfo.disks[0].diskName
-    Write-Output "$tVmName // $tDiskName"
+    Write-Output $DiskInfo.disks[0].vmName + $DiskInfo.disks[0].diskName
     $diskFromRest = $DiskInfo.disks
 } catch {
     Write-Output Error
@@ -105,9 +100,11 @@ $DiskSnapshot = LoadDiskSnapshots -azAdInfo $AzAdInfo
 $snapshotPromise = $DiskSnapshot.createDiskSnapshotWithARM($resourceGroup, $reqBody, $diskName)
 $promiseUrl = $snapshotPromise.Headers.'Azure-AsyncOperation'
 
+$snapshotPromise.Headers.'Azure-AsyncOperation'
+$promiseUrl
+
 
 ## Monitoring Promise & Validation // Creating DiskSnapshot
-Write-Output "Start create disk snapshotName"
 do {
     $header = @{
         "Authorization"="bearer " + $azAdInfo.token.access_token
@@ -116,18 +113,15 @@ do {
                                  -Headers $header `
                                  -Uri ($promiseUrl) `
                                  -UseBasicParsing
-    $tPromise = ($promise.Content | ConvertFrom-Json).status                                 
-    Write-Output "In Promise... status is $tPromise" 
+    Write-Output ($promise.Content | ConvertFrom-Json).status
     Start-Sleep -Seconds 1
 } until (($promise.Content | ConvertFrom-Json).status -eq "Succeeded")
 
 
-
 ## Monitoring Promise & Validation // Grant SAS to Snapshot
-Write-Output "Grant SAS to snapshot"
 $snapshotObject = $DiskSnapshot.getSnapshot($resourceGroup, $snapshotName)
 if($snapshotObject.StatusCode -eq 200) {
-    $grantSasPromise = $DiskSnapshot.grantAccessURL(86400, $resourceGroup, $snapshotName)
+    $grantSasPromise = $DiskSnapshot.grantAccessURL(3600, $resourceGroup, $snapshotName)
     $sasPromiseUrl = $grantSasPromise.Headers.'Azure-AsyncOperation'
     $sasPromise = $null
     do {
@@ -139,8 +133,7 @@ if($snapshotObject.StatusCode -eq 200) {
                                      -Uri ($sasPromiseUrl) `
                                      -UseBasicParsing
         $sasPromiseContent = $sasPromise.Content | ConvertFrom-Json
-        $tPromise = $sasPromiseContent.status
-        Write-Output "In Promise... status is $tPromise" 
+        Write-Output $sasPromiseContent.status
         $snapShotSasUrl = $sasPromiseContent.properties.output.accessSAS
         Start-Sleep -Seconds 1
     } until (($sasPromise.Content | ConvertFrom-Json).status -eq "Succeeded")
@@ -148,7 +141,7 @@ if($snapshotObject.StatusCode -eq 200) {
 }
 
 
-Write-Output "Start copy snapshot to storage account"
+
 $snapshotVhd = $snapshotName + ".vhd"
 $startBlobCopy = $StorageBlob.startStoragePageBlobCopyFromURL($snapShotSasUrl, "blob", $snapshotVhd)
 if($startBlobCopy.StatusCode -ge 200) {
@@ -204,10 +197,6 @@ if($startBlobCopy.StatusCode -ge 200) {
 
 }
 
-Write-Output "All job has finished"
-
-Write-Output "Revoke snapshot SAS"
-
 $requestRevokeAccess = $DiskSnapshot.revokeAccessURL($resourceGroup, $snapshotName)
 do {
     $header = @{
@@ -217,7 +206,6 @@ do {
                                  -Headers $header `
                                  -Uri $requestRevokeAccess.Headers.'Azure-AsyncOperation' `
                                  -UseBasicParsing
-    $tPromise = ($promise.Content | ConvertFrom-Json).status                                 
-    Write-Output "In Promise... status is $tPromise"
+    Write-Host ($promise.Content | ConvertFrom-Json).status
     Start-Sleep -Seconds 1
 } until (($promise.Content | ConvertFrom-Json).status -eq "Succeeded")
